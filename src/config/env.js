@@ -24,4 +24,9 @@ export const env = {
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
 
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  // FRONTEND_URL admite varios orígenes separados por coma (ej. "http://localhost:5173,https://mi-front.vercel.app")
+  frontendUrls: (process.env.FRONTEND_URL || 'http://localhost:5173')
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean),
 };

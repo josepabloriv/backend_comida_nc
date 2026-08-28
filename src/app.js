@@ -20,7 +20,14 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin(origin, callback) {
+      // Sin header Origin (curl, health checks, server-to-server) -> permitir
+      if (!origin || env.frontendUrls.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origen no permitido por CORS: ${origin}`));
+      }
+    },
     credentials: true,
   })
 );
