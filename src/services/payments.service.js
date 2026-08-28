@@ -72,24 +72,18 @@ export async function getPaymentById(supabase, paymentId) {
 /**
  * Historial de pagos de un estudiante, a través de todas sus
  * activity_accounts (no solo la actividad activa).
+ *
+ * Se consulta v_comprobantes (no la tabla payments cruda) para que cada
+ * fila incluya numero_comprobante y el resto de datos ya enriquecidos que
+ * necesita el frontend para el listado e historial de comprobantes.
  */
 export async function listPaymentsByStudent(supabase, studentId) {
   await getStudentById(supabase, studentId); // 404 si el estudiante no existe
 
-  const { data: accounts, error: accountsError } = await supabase
-    .from('activity_accounts')
-    .select('id')
-    .eq('student_id', studentId);
-
-  if (accountsError) throw accountsError;
-  if (!accounts || accounts.length === 0) return [];
-
-  const accountIds = accounts.map((a) => a.id);
-
   const { data, error } = await supabase
-    .from('payments')
+    .from('v_comprobantes')
     .select('*')
-    .in('account_id', accountIds)
+    .eq('student_id', studentId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

@@ -98,7 +98,9 @@ export async function getStudentAccount(supabase, studentId) {
     saldo_cuota: activity.cuota_base,
     cuota_completa: false,
     estado_cuota: 'PENDIENTE',
-    platos_incluidos: activity.platos_incluidos,
+    // Sin pagos todavía = 0 platos base ganados (antes decía la capacidad
+    // fija de la actividad, inconsistente con total_platos: 0 más abajo).
+    platos_incluidos: 0,
     platos_extra: 0,
     total_platos: 0,
     ingresos_extras: 0,

@@ -18,8 +18,23 @@
  * @param {string|null} params.registradoPorEmail
  */
 export function buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorEmail }) {
-  const cuotaCompleta = Number(receipt.saldo_despues_pago) <= 0;
-  const totalPlatos = (cuotaCompleta ? activity.platos_incluidos : 0) + receipt.platos_extra_acumulados;
+  // Cada pago es una compra completa de los platos que alcanzó a cubrir:
+  // ya no existe un estado "PENDIENTE" que implique deuda. Mismo criterio
+  // que v_estado_cuentas y registrar_pago() (PostgreSQL).
+  const cuotaPagada = Number(receipt.cuota_acumulada) > 0;
+  // Platos base ya ganados, proporcional al pago acumulado: cada
+  // (cuota_base / platos_incluidos) pagado habilita 1 plato, hasta el
+  // máximo de platos_incluidos. Misma regla aplicada en v_estado_cuentas
+  // y registrar_pago() (PostgreSQL) para que comprobante, cuenta y QR
+  // siempre coincidan.
+  const platosBase =
+    activity.platos_incluidos > 0
+      ? Math.min(
+          Math.floor(Number(receipt.cuota_acumulada) / (Number(activity.cuota_base) / activity.platos_incluidos)),
+          activity.platos_incluidos
+        )
+      : 0;
+  const totalPlatos = platosBase + receipt.platos_extra_acumulados;
 
   let qr = null;
   if (qrRow) {
@@ -39,30 +54,35 @@ export function buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorE
         };
   }
 
+  // Nombres en snake_case para mantener la misma convención que el resto de
+  // la API (v_comprobantes, v_estado_cuentas, payments) y que consume el
+  // frontend (ReceiptPage.jsx).
   return {
-    numeroComprobante: receipt.numero_comprobante,
-    paymentId: receipt.payment_id,
-    paymentNumber: receipt.payment_number,
+    numero_comprobante: receipt.numero_comprobante,
+    payment_id: receipt.payment_id,
+    payment_number: receipt.payment_number,
     actividad: receipt.actividad,
     fecha: receipt.fecha_guatemala,
     estudiante: receipt.estudiante,
     grado: receipt.grado,
-    montoCuota: receipt.monto_cuota,
-    cantidadPlatosExtra: receipt.cantidad_platos_extra,
-    precioPlatoExtra: receipt.precio_plato_extra,
-    totalExtras: receipt.total_extras,
-    totalRecibido: receipt.total_pago,
-    metodoPago: receipt.metodo_pago,
+    monto_cuota: receipt.monto_cuota,
+    cantidad_platos_extra: receipt.cantidad_platos_extra,
+    precio_plato_extra: receipt.precio_plato_extra,
+    total_extras: receipt.total_extras,
+    total_recibido: receipt.total_pago,
+    metodo_pago: receipt.metodo_pago,
     observaciones: receipt.observaciones,
-    cuotaAcumulada: receipt.cuota_acumulada,
-    saldoPendiente: receipt.saldo_despues_pago,
-    estadoCuota: cuotaCompleta ? 'PAGADA' : 'PENDIENTE',
-    cantidadTotalPlatos: totalPlatos,
+    cuota_acumulada: receipt.cuota_acumulada,
+    // Ya no es una deuda: es el monto que, si el estudiante quisiera,
+    // podría pagar de más para sumar más platos hasta completar la
+    // cuota (informativo, nunca un saldo que se "deba").
+    disponible_adicional: receipt.saldo_despues_pago,
+    estado_cuota: cuotaPagada ? 'PAGADO' : 'SIN PAGO',
+    total_platos: totalPlatos,
     qr,
-    registradoPor: {
-      id: receipt.registrado_por,
-      email: registradoPorEmail,
-    },
+    qr_image: qr?.image ?? null,
+    registrado_por: receipt.registrado_por,
+    usuario: registradoPorEmail,
     copias: ['COPIA CONTRIBUYENTE', 'COPIA REGISTRO'],
   };
 }
