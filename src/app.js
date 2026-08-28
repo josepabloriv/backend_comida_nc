@@ -25,6 +25,10 @@ app.use(
       if (!origin || env.frontendUrls.includes(origin)) {
         callback(null, true);
       } else {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[cors] Origen rechazado: "${origin}". Permitidos (FRONTEND_URL): ${env.frontendUrls.join(', ')}`
+        );
         callback(new Error(`Origen no permitido por CORS: ${origin}`));
       }
     },

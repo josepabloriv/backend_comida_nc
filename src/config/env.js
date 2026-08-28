@@ -25,8 +25,9 @@ export const env = {
 
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   // FRONTEND_URL admite varios orígenes separados por coma (ej. "http://localhost:5173,https://mi-front.vercel.app")
+  // Se tolera espacios, comillas envolventes y una barra final de sobra en cada valor.
   frontendUrls: (process.env.FRONTEND_URL || 'http://localhost:5173')
     .split(',')
-    .map((url) => url.trim())
+    .map((url) => url.trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, ''))
     .filter(Boolean),
 };
