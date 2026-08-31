@@ -28,7 +28,7 @@ export async function getReceiptData(supabase, paymentId) {
 
   const { data: account, error: accountError } = await supabase
     .from('activity_accounts')
-    .select('activity_id')
+    .select('activity_id, student_id')
     .eq('id', receipt.account_id)
     .maybeSingle();
 
@@ -71,5 +71,5 @@ export async function getReceiptData(supabase, paymentId) {
     registradoPorEmail = null;
   }
 
-  return buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorEmail });
+  return buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorEmail, studentId: account.student_id });
 }

@@ -16,8 +16,11 @@
  * @param {{qr_token:string, version:number, activo:boolean}|null} params.qrRow
  * @param {string|null} params.qrImage data URL de la imagen QR (solo si el QR sigue activo)
  * @param {string|null} params.registradoPorEmail
+ * @param {string} params.studentId id interno del estudiante (activity_accounts.student_id),
+ *   para que el frontend pueda enlazar "Agregar más platos" de vuelta al mismo estudiante
+ *   sin tener que volver a buscarlo.
  */
-export function buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorEmail }) {
+export function buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorEmail, studentId }) {
   // Cada pago es una compra completa de los platos que alcanzó a cubrir:
   // ya no existe un estado "PENDIENTE" que implique deuda. Mismo criterio
   // que v_estado_cuentas y registrar_pago() (PostgreSQL).
@@ -61,6 +64,7 @@ export function buildReceipt({ receipt, activity, qrRow, qrImage, registradoPorE
     numero_comprobante: receipt.numero_comprobante,
     payment_id: receipt.payment_id,
     payment_number: receipt.payment_number,
+    student_id: studentId,
     actividad: receipt.actividad,
     fecha: receipt.fecha_guatemala,
     estudiante: receipt.estudiante,
